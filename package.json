@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "irc-framework": "^2.5.2",
+    "irc-message": "^3.0.2",
+    "lodash": "^4.17.3",
+    "sockjs": "^0.3.18"
+  }
+}
