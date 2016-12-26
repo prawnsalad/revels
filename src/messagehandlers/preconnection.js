@@ -6,6 +6,10 @@ const Storage = require('../storage');
 module.exports.handle = handlePreConnectionMessage;
 
 function handlePreConnectionMessage(client, channel, message) {
+	if (!message) {
+		return;
+	}
+
 	if (message.command === 'HOST') {
 		// Default IRC connection details
 		let server_host = '';
@@ -104,6 +108,24 @@ function handlePreConnectionMessage(client, channel, message) {
 
 	} else if (message.command === 'NICK' && message.params[0]) {
 		channel.state.connection.nick = message.params[0];
+	} else if (message.command === 'CAP') {
+		let serverName = 'bnc@kiwiirc';
+		let supportedCaps = [
+		];
+
+		if (message.params[0] === 'LS') {
+			client.cap.isNegotiating = true;
+			channel.write(`:${serverName} CAP * LS :${supportedCaps.join(' ')}`, client.socket);
+		} else if (message.params[1] === 'REQ') {
+			let requestedCaps = message.params.slice(2);
+			let commonCaps = _.intersection(supportedCaps, requestedCaps);
+			client.cap.enabled = commonCaps;
+			channel.write(`:${serverName} CAP * ACK :${commonCaps.join(' ')}`, client.socket);
+		} else if (message.params[1] === 'END') {
+			client.cap.isNegotiating = false;
+		}
+
+		return;
 	}
 
 	channel.connectIfReady();

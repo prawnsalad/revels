@@ -16,6 +16,11 @@ function Client(socket, sessionStore) {
 	this.sessionStore = sessionStore;
 	this.session = sessionStore.newSession();
 	this.channel = null;
+	this.cap = {
+		isNegotiating: false,
+		enabled: [],
+		isEnabled: cap => this.cap.enabled.indexOf(cap) > -1,
+	};
 
 	if (!socket.hasChannelSupport) {
 		this.channel = this.session.addChannel(defaultChannelId);
@@ -48,21 +53,22 @@ Client.prototype.onSocketClose = function onSocketClose() {
 Client.prototype.onSocketData = function onSocketData(rawLine) {
 	let thisChannel = null;
 	let line = null;
-
+	console.log('[c]', rawLine);
 	// What channel is this line meant for?
 	if (!this.socket.hasChannelSupport) {
 		thisChannel = this.channel;
 		line = rawLine;
 
 	} else {
-		let f = parseChanneledLine(line);
+		let f = parseChanneledLine(rawLine);
 
 		// A channel but no message is the client creating or joining a channel,
 		// so acknowledge it.
 		if (f.channel && !f.message) {
 			thisChannel = this.session.addChannel(f.channel);
 			this.socket.write(':' + f.channel);
-			thisChannel.addWs(this.socket);
+			thisChannel.addSocket(this.socket);
+			console.log('Created channel ' + f.channel);
 			return;
 		}
 
@@ -81,7 +87,7 @@ Client.prototype.onSocketData = function onSocketData(rawLine) {
 	let ircMessage = parseIrcLine(line);
 
 	// Control commands can be used at any time
-	if (ircMessage.command === 'CONTROL') {
+	if (ircMessage && ircMessage.command === 'CONTROL') {
 		controlMessageHandler.handle(this, thisChannel, ircMessage);
 	// A select few command only available while not connected upstream
 	} else if (!thisChannel.isUpstreamConnected()) {

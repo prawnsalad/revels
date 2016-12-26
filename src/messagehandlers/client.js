@@ -28,13 +28,13 @@ function handleClientMessage(client, channel, message) {
 			channel.upstream.quit();
 		} else if (message.params[1] === 'connect') {
 			channel.upstream.connect();
+		} else if (message.params[1] === 'debug') {
+			channel.writeStatus('Enabled CAPS: ' + client.cap.enabled.join(' '));
 		}
 		return;
-	}
-
-	if (message.command === 'CAP') {
-		// TODO: handle caps here
-		return;
+	} else if (message.command === 'PRIVMSG' && client.cap.isEnabled('echo-message')) {
+		let line = `:${channel.state.mask} PRIVMSG ${message.params[0]} :${message.params[1]}`;
+		channel.writeToOtherSockets(line, client.socket);
 	}
 
 	if (message.command === 'QUIT') {
@@ -49,7 +49,7 @@ function handleClientMessage(client, channel, message) {
 	}
 
 	if (message.command === 'CAP') {
-		// irc-framework handles this for us
+		// Any CAP messages after being connected should be ignored
 		return;
 	}
 

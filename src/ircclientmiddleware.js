@@ -25,7 +25,7 @@ function clientMiddleware(channel) {
 			channel.writeStatus(`Now connected to ${channel.state.connection.host}!`);
 		});
 
-		client.on('raw', (event) => {
+		client.on('_raw', (event) => {
 			console.log(event.from_server ? '[S]' : '[C]', event.line);
 		});
 	};

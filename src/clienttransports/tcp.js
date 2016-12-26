@@ -8,7 +8,7 @@ module.exports.startAcceptingClients = function(fn) {
 		socket.setEncoding('utf8');
 
 		let client = new EventEmitter();
-		client.has_channel_support = false;
+		client.hasChannelSupport = false;
 
 		client.write = (line) => {
 			socket.write(`${line}\r\n`);

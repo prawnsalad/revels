@@ -45,8 +45,21 @@ Channel.prototype.write = function(line, onlyThisSocket) {
 	let destSockets = onlyThisSocket ?
 		[onlyThisSocket] :
 		this.sockets;
-
-	destSockets.forEach(socket => socket.write(line));
+	console.log('[s]', line);
+	destSockets.forEach(socket => {
+		let out = line;
+		if (socket.hasChannelSupport) {
+			out = ':' + this.id + ' ' + line;
+		}
+		socket.write(out);
+	});
+};
+Channel.prototype.writeToOtherSockets = function(line, notThisSocket) {
+	this.sockets.forEach(socket => {
+		if (socket !== notThisSocket) {
+			socket.write(line)
+		}
+	});
 };
 Channel.prototype.writeStatus = function writeStatus(line, onlyThisSocket) {
 	this.write(':*status!bnc@kiwiirc NOTICE * :' + line, onlyThisSocket);
