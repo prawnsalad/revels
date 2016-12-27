@@ -109,8 +109,14 @@ function handlePreConnectionMessage(client, channel, message) {
 	} else if (message.command === 'NICK' && message.params[0]) {
 		channel.state.connection.nick = message.params[0];
 	} else if (message.command === 'CAP') {
-		let serverName = 'bnc@kiwiirc';
+		let serverName = 'bnc.kiwiirc.com';
 		let supportedCaps = [
+			// Some CAPs that irc-framework supports
+			'multi-prefix',
+			'away-notify',
+			'server-time',
+			'znc.in/server-time',
+			'extended-join'
 		];
 
 		if (message.params[0] === 'LS') {
