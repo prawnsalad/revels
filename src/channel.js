@@ -46,7 +46,7 @@ Channel.prototype.write = function(line, onlyThisSocket) {
 	let destSockets = onlyThisSocket ?
 		[onlyThisSocket] :
 		this.sockets;
-	console.log('[s]', line);
+
 	destSockets.forEach(socket => {
 		let out = line;
 		if (socket.hasChannelSupport) {
@@ -130,27 +130,27 @@ Channel.prototype.removeBuffer = function removeBuffer(bufferName) {
 Channel.prototype.syncToSocket = function syncToSocket(socket) {
 	console.log('Syncing session..');
 
-	console.log('Registration lines:', this.state.replay.registration.length);
+	// Send any registration related lines
 	this.state.replay.registration.forEach(message => {
 		message.params[0] = this.state.nick;
 		console.log(messageToLine(message));
 		this.write(messageToLine(message), socket);
 	});
 
-	console.log('Support lines:', this.state.replay.support.length);
+	// Send the ISUPPORT lines
 	this.state.replay.support.forEach(message => {
 		message.params[0] = this.state.nick;
 		console.log(messageToLine(message));
 		this.write(messageToLine(message), socket);
 	});
 
-	console.log('MOTD:', this.state.replay.motd.length);
+	// Send the MOTD
 	this.state.replay.motd.forEach(message => {
 		message.params[0] = this.state.nick;
 		this.write(messageToLine(message), socket);
 	});
 
-	console.log('Channels:', Object.keys(this.state.buffers).length);
+	// Send buffers
 	_.each(this.state.buffers, buffer => {
 		console.log('Syncing', buffer.name);
 		this.upstream.raw('TOPIC ' + buffer.name);
