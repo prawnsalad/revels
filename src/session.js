@@ -11,7 +11,7 @@ function Session(sessions, newId) {
 	this.id = newId;
 	this.userId = 0;
 	this.channels = Object.create(null);
-	this.persistent = true;
+	this.persistent = false;
 }
 Session.prototype.setUser = function(userId) {
 	this.userId = userId;

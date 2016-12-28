@@ -36,6 +36,10 @@ function handleControlMessage(client, channel, message) {
                 // No existing session found so use the current one and load any
                 // stored networks into it
                 client.session.setUser(userId);
+
+                // Since this is a local user, keep the IRC connections alive
+                client.session.persistent = true;
+
                 return client.session.updateFromStorage();
             }
         }).then(() => {

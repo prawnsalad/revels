@@ -17,11 +17,11 @@ SessionStore.prototype.newSession = function() {
 	return session;
 };
 SessionStore.prototype.removeSession = function(session, force) {
-	if (session.userId) {
-		this.byUser.delete(session.userId);
-	}
-
 	if (!session.persistent) {
+		if (session.userId) {
+			this.byUser.delete(session.userId);
+		}
+
 		this.byId.delete(session.id);
 	}
 };

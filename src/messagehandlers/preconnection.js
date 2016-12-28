@@ -72,6 +72,10 @@ function handlePreConnectionMessage(client, channel, message) {
 						// No existing session found so use the current one and load any
 						// stored networks into it
 						client.session.setUser(user);
+
+						// Since this is a local user, keep the IRC connections alive
+						client.session.persistent = true;
+
 						return client.session.updateFromStorage();
 					}
 				})
@@ -85,7 +89,7 @@ function handlePreConnectionMessage(client, channel, message) {
 					client.channel = channel;
 					client.channel.addSocket(client.socket);
 					channel.connectIfReady();
-					syncChannelToClient(channel, client.socket);
+					channel.syncToSocket(client.socket);
 				})
 				.catch((err) => {
 					let isError = err && err.stack;
@@ -155,55 +159,3 @@ function authUser(userId, password) {
 	});
 }
 
-
-function messageToLine(message) {
-	let line = '';
-	if (message.prefix) {
-		line += ':' + message.prefix + ' ';
-	}
-
-	line += message.command;
-
-	for(let i=0; i<message.params.length; i++) {
-		if (i === message.params.length - 1) {
-			line += ' :' + message.params[i];
-		} else {
-			line += ' ' + message.params[i];
-		}
-	}
-
-	return line;
-}
-
-
-function syncChannelToClient(channel, socket) {
-	console.log('Syncing session..');
-
-	console.log('Registration lines:', channel.state.replay.registration.length);
-	channel.state.replay.registration.forEach(message => {
-		message.params[0] = channel.state.nick;
-		console.log(messageToLine(message));
-		channel.write(messageToLine(message), socket);
-	});
-
-	console.log('Support lines:', channel.state.replay.support.length);
-	channel.state.replay.support.forEach(message => {
-		message.params[0] = channel.state.nick;
-		console.log(messageToLine(message));
-		channel.write(messageToLine(message), socket);
-	});
-
-	console.log('MOTD:', channel.state.replay.motd.length);
-	channel.state.replay.motd.forEach(message => {
-		message.params[0] = channel.state.nick;
-		channel.write(messageToLine(message), socket);
-	});
-
-	console.log('Channels:', Object.keys(channel.state.buffers).length);
-	_.each(channel.state.buffers, buffer => {
-		console.log('Syncing', buffer.name);
-		channel.upstream.raw('TOPIC ' + buffer.name);
-		channel.upstream.raw('NAMES ' + buffer.name);
-		channel.write(`:${channel.state.mask} JOIN ${buffer.name} * :${channel.upstream.user.gecos}`, socket);
-	});
-}

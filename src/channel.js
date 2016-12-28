@@ -1,5 +1,6 @@
 'use strict';
 
+const _ = require('lodash');
 const IrcClient = require('irc-framework').Client;
 const ircClientMiddleware = require('./ircClientMiddleware');
 
@@ -126,3 +127,55 @@ Channel.prototype.getOrCreateBuffer = function getOrCreateBuffer(bufferName) {
 Channel.prototype.removeBuffer = function removeBuffer(bufferName) {
 	delete this.state.buffers[bufferName.toLowerCase()];
 };
+Channel.prototype.syncToSocket = function syncToSocket(socket) {
+	console.log('Syncing session..');
+
+	console.log('Registration lines:', this.state.replay.registration.length);
+	this.state.replay.registration.forEach(message => {
+		message.params[0] = this.state.nick;
+		console.log(messageToLine(message));
+		this.write(messageToLine(message), socket);
+	});
+
+	console.log('Support lines:', this.state.replay.support.length);
+	this.state.replay.support.forEach(message => {
+		message.params[0] = this.state.nick;
+		console.log(messageToLine(message));
+		this.write(messageToLine(message), socket);
+	});
+
+	console.log('MOTD:', this.state.replay.motd.length);
+	this.state.replay.motd.forEach(message => {
+		message.params[0] = this.state.nick;
+		this.write(messageToLine(message), socket);
+	});
+
+	console.log('Channels:', Object.keys(this.state.buffers).length);
+	_.each(this.state.buffers, buffer => {
+		console.log('Syncing', buffer.name);
+		this.upstream.raw('TOPIC ' + buffer.name);
+		this.upstream.raw('NAMES ' + buffer.name);
+		this.write(`:${this.state.mask} JOIN ${buffer.name} * :${this.upstream.user.gecos}`, socket);
+	});
+};
+
+
+
+function messageToLine(message) {
+	let line = '';
+	if (message.prefix) {
+		line += ':' + message.prefix + ' ';
+	}
+
+	line += message.command;
+
+	for(let i=0; i<message.params.length; i++) {
+		if (i === message.params.length - 1) {
+			line += ' :' + message.params[i];
+		} else {
+			line += ' ' + message.params[i];
+		}
+	}
+
+	return line;
+}

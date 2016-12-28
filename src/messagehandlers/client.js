@@ -44,7 +44,10 @@ function handleClientMessage(client, channel, message) {
 	}
 
 	if (message.command === 'USER') {
-		// irc-framework handles this for us
+		// If we're already connected upstream, sync the channel to the client
+		if (channel.isUpstreamConnected()) {
+			channel.syncToSocket(client.socket);
+		}
 		return;
 	}
 
