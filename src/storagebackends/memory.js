@@ -2,8 +2,8 @@
 
 const db = {
 	users: {
-		darren: {
-			password: 'mypass',
+		user: {
+			password: 'user',
 			networks: [
 				{
 					channel: '1',
