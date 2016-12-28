@@ -51,30 +51,31 @@ function handleControlMessage(client, channel, message) {
 
     } else if (params[0] === 'LIST' && params[1] === 'NETWORKS') {
         for (let channelId in client.session.channels) {
-            let channel = client.session.channels[channelId];
+            if (channelId === '0') continue;
+            let chan = client.session.channels[channelId];
             let props = [];
-            props.push('NAME=' + channel.state.name);
+            props.push('NAME=' + chan.state.name);
             props.push('CHANNEL=' + channelId);
-            props.push('CONNECTED=' + (channel.isUpstreamConnected() ? '1' : '0'));
-            props.push('HOST=' + channel.state.connection.host);
-            props.push('PORT=' + channel.state.connection.port);
-            props.push('TLS=' + (channel.state.connection.tls ? '1' : '0'));
-            props.push('NICK=' + channel.state.nick);
-            if (channel.state.connection.password) {
-                props.push('PASS=' + channel.state.connection.password);
+            props.push('CONNECTED=' + (chan.isUpstreamConnected() ? '1' : '0'));
+            props.push('HOST=' + chan.state.connection.host);
+            props.push('PORT=' + chan.state.connection.port);
+            props.push('TLS=' + (chan.state.connection.tls ? '1' : '0'));
+            props.push('NICK=' + chan.state.nick);
+            if (chan.state.connection.password) {
+                props.push('PASS=' + chan.state.connection.password);
             }
 
             channel.write('CONTROL LISTING NETWORK ' + props.join(' '), client.socket);
 
-            _.each(channel.state.buffers, buffer => {
+            _.each(chan.state.buffers, buffer => {
                 let props = [];
                 props.push('CHANNEL=' + channelId);
                 props.push('NAME=' + buffer.name);
                 props.push('JOINED=' + (buffer.joined ? '1' : '0'));
                 channel.write('CONTROL LISTING BUFFER ' + props.join(' '), client.socket);
             });
-
-            channel.write('CONTROL LISTING NETWORK END', client.socket);
         }
+
+        channel.write('CONTROL LISTING NETWORK END', client.socket);
     }
 }
