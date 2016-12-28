@@ -5,6 +5,10 @@ const preConnectionMessageHandler = require('./messagehandlers/preconnection');
 const clientMessageHandler = require('./messagehandlers/client');
 const controlMessageHandler = require('./messagehandlers/control');
 
+// The reserved channel ID for only control messages
+const controlChannelId = '0';
+
+// The default channel ID that can be used for data (IRC traffic)
 const defaultChannelId = '1';
 
 module.exports = Client;
@@ -23,8 +27,15 @@ function Client(socket, sessionStore) {
 	};
 
 	if (!socket.hasChannelSupport) {
+		// If the socket doesn't have multiple channel support (such as direct socket connections)
+		// then set up the default channel and assign ourselves to it.
 		this.channel = this.session.addChannel(defaultChannelId);
 		this.channel.addSocket(socket);
+	} else {
+		// However.. if we do have multiple channel support then create the control channel now
+		// so it's ready to be used.
+		let controlChannel = this.session.addChannel(controlChannelId);
+		controlChannel.addSocket(socket);
 	}
 
 	this.listenOn(socket, 'data', this.onSocketData.bind(this));
