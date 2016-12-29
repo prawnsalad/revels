@@ -2,7 +2,7 @@
 
 const _ = require('lodash');
 const IrcClient = require('irc-framework').Client;
-const ircClientMiddleware = require('./ircClientMiddleware');
+const ircClientMiddleware = require('./ircclientmiddleware');
 
 module.exports = Channel;
 
